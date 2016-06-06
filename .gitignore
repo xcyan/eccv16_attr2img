@@ -1,0 +1,11 @@
+# Folders
+models/
+data/
+
+# Temporal files
+*.t7
+*.mat
+*.jpg
+*.png
+
+
