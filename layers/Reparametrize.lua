@@ -1,3 +1,4 @@
+-- Code adapted from https://github.com/y0ast/VAE-Torch
 -- Based on JoinTable module
 
 require 'nn'
