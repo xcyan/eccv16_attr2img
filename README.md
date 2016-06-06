@@ -12,7 +12,7 @@ Attribute2Image requires or works with
 ## Installing Dependency
 * Install [Torch](http://torch.ch)
 
-## Data Downloading
+## Data Preprocessing
 * For LFW dataset, please run the script to download the pre-processed dataset
 ```
 ./prepare_cropped_lfw.sh
