@@ -1,3 +1,4 @@
+-- Code adapted from https://github.com/y0ast/VAE-Torch
 local KLDCriterion, parent = torch.class('nn.KLDCriterion', 'nn.Criterion')
 
 function KLDCriterion:updateOutput(input, target)
