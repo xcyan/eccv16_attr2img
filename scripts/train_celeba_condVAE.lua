@@ -15,19 +15,20 @@ require 'layers.LinearMix2'
 require 'layers.Reparametrize'
 require 'layers.GaussianCriterion'
 require 'layers.KLDCriterion'
-require 'utils.scaled_lfw'
+require 'utils.scaled_celeba'
 optim_utils = require 'utils.adam_v2'
 
 -- parse command-line options
 opts = lapp[[
+  --dataPath      (default '')
   --saveFreq      (default 20)        save every saveFreq epochs
-  --modelString   (default 'arch_condVAE')        reload pretrained network
+  --modelString   (default "arch_condVAE")        reload pretrained network
   -p,--plot                         plot while training
   -t,--threads    (default 4)         number of threads
   -g,--gpu        (default -1)        gpu to run on (default cpu)
   --scale         (default 64)        scale of images to train on
   -z,--zdim       (default 256)
-  -y,--ydim       (default 73)
+  -y,--ydim       (default 40)
   --maxEpoch      (default 0)
   --batchSize     (default 32)
   --weightDecay   (default 0.004)
@@ -35,7 +36,7 @@ opts = lapp[[
   --modelDir      (default 'models/')
 ]]
 
-opts.modelName = string.format('LFW_%s_adam%d_bs%d_zdim%d_wd%g', 
+opts.modelName = string.format('CelebA_%s_adam%d_bs%d_zdim%d_wd%g', 
   opts.modelString, opts.adam, opts.batchSize, opts.zdim, opts.weightDecay)
 
 if opts.gpu < 0 or opts.gpu > 3 then opts.gpu = -1 end
@@ -60,8 +61,8 @@ if opts.modelString == '' then
 else
   print('scripts/' .. opts.modelString .. '.lua')
 
-  lfwcvae_module = dofile('scripts/' .. opts.modelString .. '.lua')
-  encoder, decoder = lfwcvae_module.create(opts)
+  celeba_cvae_module = dofile('scripts/' .. opts.modelString .. '.lua')
+  encoder, decoder = celeba_cvae_module.create(opts)
 end
 
 -- retrieve parameters and gradients
@@ -105,17 +106,15 @@ criterionLL = nn.GaussianCriterion()
 criterionKLD = nn.KLDCriterion()
 
 -- get/create dataset
-ntrain = math.floor(9464 * 0.9)
-nval = 9464 - ntrain
-
 print('data preprocessing')
-lfw.setScale(opts.scale)
-trainData = lfw.loadTrainSet(1, ntrain)
---mean, std = image_utils.normalizeGlobal(trainData.data)
+celeba.setScale(opts.scale)
+if #opts.dataPath > 0 then
+  celeba.setPath(opts.dataPath)
+end
+trainData = celeba.loadDataSet('train')
 trainData:scaleData()
 
-valData = lfw.loadTrainSet(ntrain + 1, ntrain + nval)
---image_utils.normalizeGlobal(valData.data, mean, std)
+valData = celeba.loadDataSet('val')
 valData:scaleData()
 
 ntrain = trainData:size()
@@ -130,12 +129,6 @@ function getAdamParams(opts)
     config.learningRate = -0.0003
     config.epsilon = 1e-8
     config.beta1 = 0.9
-    config.beta2 = 0.999
-    config.weightDecay = -opts.weightDecay
-  elseif opts.adam == 2 then
-    config.learningRate = -0.0003
-    config.epsilon = 1e-8
-    config.beta1 = 0.5
     config.beta2 = 0.999
     config.weightDecay = -opts.weightDecay
   end
@@ -163,8 +156,10 @@ for t = epoch+1, opts.maxEpoch do
   local N_train = ntrain - (ntrain % opts.batchSize)
   local N_val = nval - (nval % opts.batchSize)
 
-  cvae:training()
-  for i = 1, N_train, opts.batchSize do 
+  N_train = 80000
+  for i = 1, N_train, opts.batchSize do
+    xlua.progress(i+opts.batchSize-1, N_train)
+
     local batch_im = torch.Tensor(opts.batchSize, 3, opts.scale, opts.scale)
     local batch_attr = torch.Tensor(opts.batchSize, opts.ydim)
 
@@ -181,20 +176,22 @@ for t = epoch+1, opts.maxEpoch do
       local randR = torch.rand(1)*0.06+0.97
       local randG = torch.rand(1)*0.06+0.97
       local randB = torch.rand(1)*0.06+0.97
-      cur_im[{{1}, {}, {}}]:mul(randR:float()[1])
-      cur_im[{{2}, {}, {}}]:mul(randG:float()[1])
-      cur_im[{{3}, {}, {}}]:mul(randB:float()[1])
+      cur_im[1]:mul(randR:float()[1])
+      cur_im[2]:mul(randG:float()[1])
+      cur_im[3]:mul(randB:float()[1])
       -- sharpness augmentation
       local cur_im_blurred = image.convolve(cur_im, blurK, 'same')
       local cur_im_residue = torch.add(cur_im, -1, cur_im_blurred)
       local randSh = torch.rand(1)*1.5
       cur_im:add(randSh:float()[1], cur_im_residue)
+      
       local cur_attr = trainData[idx][2]:clone()
 
       batch_im[k] = cur_im
       batch_attr[k] = cur_attr
       k = k + 1
     end
+
     batch_im:mul(2):add(-1)
 
     local curLL = 0
@@ -227,9 +224,8 @@ for t = epoch+1, opts.maxEpoch do
     trainLB = trainLB + batchLB[1]
     trainLL = trainLL + curLL
     trainKL = trainKL + curKL
-    print(string.format('Epoch %d [%d/%d]:\t%g %g %g', 
-      t, i, N_train, batchLB[1]/opts.batchSize, curLL/opts.batchSize, curKL/opts.batchSize))
-
+    print(string.format('LB = %.3f, LL = %.3f, KL = %.3f', batchLB[1] / batch_im:size(1),
+      curLL / opts.batchSize, curKL / opts.batchSize))
   end
 
   if LBlist_train then
@@ -239,8 +235,10 @@ for t = epoch+1, opts.maxEpoch do
   end
 
   -- val set
-  cvae:evaluate()
+  N_val = 10000
   for i = 1, N_val, opts.batchSize do
+    xlua.progress(i+opts.batchSize-1, N_val)
+
     local batch_im = torch.Tensor(opts.batchSize, 3, opts.scale, opts.scale)
     local batch_attr = torch.Tensor(opts.batchSize, opts.ydim)
 
@@ -253,23 +251,39 @@ for t = epoch+1, opts.maxEpoch do
         cur_im = image.hflip(cur_im:float())
       end
       local cur_attr = valData[idx][2]:clone()
+
       batch_im[k] = cur_im
       batch_attr[k] = cur_attr
       k = k + 1
     end
     batch_im:mul(2):add(-1)
 
-    cvae:zeroGradParameters()
-    local f = cvae:forward({{batch_im, batch_attr}, batch_attr})
-    local LLerr = criterionLL:forward(f, batch_im)
-    local KLDerr = criterionKLD:forward(enc_sampling:get(1).output, batch_im)
+    local curLL = 0
+    local curKL = 0
 
-    samples_gt = batch_im:float():clone()
-    samples_gen = f[1]:float():clone()
+    local opfunc = function(x)
+      collectgarbage()
+      if x ~= parameters then
+        parameters:copy(x)
+      end
 
-    valLB = valLB + (LLerr + KLDerr)
-    valLL = valLL + LLerr
-    valKL = valKL + KLDerr
+      cvae:zeroGradParameters()
+      local f = cvae:forward({{batch_im, batch_attr}, batch_attr})
+      local LLerr = criterionLL:forward(f, batch_im)
+      local KLDerr = criterionKLD:forward(enc_sampling:get(1).output, batch_im)
+      curLL = LLerr
+      curKL = KLDerr
+      local lowerbound = (LLerr + KLDerr) 
+      
+      return lowerbound, gradients
+    end
+    
+    x, batchLB = optim_utils.adam_v2(opfunc, parameters, config, state)
+    valLB = valLB + batchLB[1]
+    valLL = valLL + curLL
+    valKL = valKL + curKL
+    print(string.format('LB = %.3f, LL = %.3f, KL = %.3f', batchLB[1] / batch_im:size(1),
+      curLL / opts.batchSize, curKL / opts.batchSize))
   end
 
   if LBlist_val then
@@ -280,12 +294,11 @@ for t = epoch+1, opts.maxEpoch do
 
   print(string.format('#### epoch (%d)\t train LB (LL, KL) = %g (%g, %g) ####',
     t, trainLB/N_train, trainLL/N_train, trainKL/N_train))
-  print(string.format('#### epoch (%d)\t val LB (LL, KL) = %g (%g, %g) ####', 
-    t, valLB/N_val, valLL/N_val, valKL/N_val))
+  print(string.format('#### epoch (%d)\t val LB (LL, KL) = %g (%g, %g) ####',
+    t, valLB/N_val, trainLL/N_val, trainKL/N_val))
 
   -- Displaying the intermediate results
   if t % 1 == 0 then
-    
     local batch_im = torch.Tensor(32, 3, opts.scale, opts.scale)
     local batch_attr = torch.Tensor(32, opts.ydim)
     local batch_z = torch.Tensor(32, opts.zdim):normal(0,1)
@@ -296,8 +309,7 @@ for t = epoch+1, opts.maxEpoch do
       batch_im[i] = cur_im
       batch_attr[i] = cur_attr
     end
-    batch_im:mul(2):add(-1)
-
+    
     local f = decoder:forward({batch_z, batch_attr})
 
     to_plot = {}
@@ -305,17 +317,16 @@ for t = epoch+1, opts.maxEpoch do
       local res = f[1][i]:clone()
       res = torch.squeeze(res)
       res:add(1):mul(0.5)
-      
       to_plot[#to_plot+1] = res:clone()
       local res = batch_im[i]:clone()
       res = torch.squeeze(res)
-      res:add(1):mul(0.5)
       to_plot[#to_plot+1] = res:clone()
     end
-
+    
     local formatted = image.toDisplayTensor({input=to_plot, nrow=8})
     formatted = formatted:double()
     formatted:mul(255)
+    --formatted = image.rotate(formatted, -math.pi/2):clone()
     formatted = formatted:byte()
 
     image.save(opts.modelPath .. string.format('/sample-%d.jpg', t), formatted)
@@ -323,7 +334,6 @@ for t = epoch+1, opts.maxEpoch do
 
   -- Saving to files
   if t % opts.saveFreq == 0 then
-    collectgarbage()
     torch.save((opts.modelPath .. string.format('/net-epoch-%d.t7', t))
       , {encoder = encoder, decoder = decoder})
     torch.save((opts.modelPath .. '/state.t7'), state)
