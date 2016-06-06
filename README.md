@@ -1,4 +1,4 @@
-# Attribute2Image: Conditional Image Generation from Visual Attributes
+# Attribute2Image
 
 This is the code for arXiv paper [Attribute2Image: Conditional Image Generation from Visual Attributes](https://arxiv.org/abs/1512.00570) by Xinchen Yan, Jimei Yang, Kihyuk Sohn and Honglak Lee.
 
