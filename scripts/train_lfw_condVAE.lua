@@ -7,14 +7,9 @@ require 'optim'
 require 'image'
 require 'pl'
 require 'paths'
-require 'mattorch'
 
 require 'layers.LinearWP'
 require 'layers.LinearGaussian'
-require 'layers.SpatialConvWP'
-require 'layers.SpatialConvGaussian'
-require 'layers.cudnnSpatialConvWP'
-require 'layers.cudnnSpatialConvGaussian'
 require 'layers.LinearMix'
 require 'layers.LinearMix2'
 require 'layers.Reparametrize'
@@ -22,33 +17,29 @@ require 'layers.GaussianCriterion'
 require 'layers.KLDCriterion'
 require 'utils.scaled_lfw'
 optim_utils = require 'utils.adam_v2'
-image_utils = require 'utils.image_utils'
+--image_utils = require 'utils.image_utils'
 
 -- parse command-line options
 opts = lapp[[
-  --saveFreq    (default 20)        save every saveFreq epochs
-  --modelString  (default "")        reload pretrained network
+  --saveFreq      (default 20)        save every saveFreq epochs
+  --modelString   (default 'arch_condVAE')        reload pretrained network
   -p,--plot                         plot while training
-  -t,--threads  (default 4)         number of threads
-  -g,--gpu      (default -1)        gpu to run on (default cpu)
-  --scale       (default 64)        scale of images to train on
-  -z,--zdim        (default 256)
-  -y,--ydim        (default 73)
-  --maxEpoch    (default 0)
-  --batchSize    (default 32)
-  --nsample  (default 1)       number of samples
-  --weightInit   (default 1)
-  --biasInit     (default 0.01)
-  --weightDecay  (default 0.004)
-  --adam        (default 1)         lr mode
-  --modelDir    (default '../lfw_models/')
+  -t,--threads    (default 4)         number of threads
+  -g,--gpu        (default -1)        gpu to run on (default cpu)
+  --scale         (default 64)        scale of images to train on
+  -z,--zdim       (default 256)
+  -y,--ydim       (default 73)
+  --maxEpoch      (default 0)
+  --batchSize     (default 32)
+  --weightDecay   (default 0.004)
+  --adam          (default 1)         lr mode
+  --modelDir      (default 'models/')
 ]]
 
 --opts.modelDir = '../lfw_models/'
 
-opts.modelName = string.format('%s_adam%d_bs%d_ns%d_zdim%d_wi%g_bi%g_wd%g', 
-  opts.modelString, opts.adam, opts.batchSize, opts.nsample, opts.zdim,
-  opts.weightInit, opts.biasInit, opts.weightDecay)
+opts.modelName = string.format('%s_adam%d_bs%d_zdim%d_wd%g', 
+  opts.modelString, opts.adam, opts.batchSize, opts.zdim, opts.weightDecay)
 
 if opts.gpu < 0 or opts.gpu > 3 then opts.gpu = -1 end
 print(opts)
@@ -70,9 +61,9 @@ end
 if opts.modelString == '' then
   error('empty modelString')
 else
-  print('prototxt_cvae_lfw/' .. opts.modelString .. '.lua')
+  print('scripts/' .. opts.modelString .. '.lua')
 
-  lfwcvae_module = dofile('prototxt_lfw_cvae/' .. opts.modelString .. '.lua')
+  lfwcvae_module = dofile('scripts/' .. opts.modelString .. '.lua')
   encoder, decoder = lfwcvae_module.create(opts)
 end
 
@@ -124,12 +115,12 @@ nval = 9464 - ntrain
 print('data preprocessing')
 lfw.setScale(opts.scale)
 trainData = lfw.loadTrainSet(1, ntrain)
-mean, std = image_utils.normalizeGlobal(trainData.data)
+--mean, std = image_utils.normalizeGlobal(trainData.data)
 --old_min, old_max = image_utils.contrastNormalize(trainData.attr, -1, 1)
 trainData:scaleData()
 
 valData = lfw.loadTrainSet(ntrain + 1, ntrain + nval)
-image_utils.normalizeGlobal(valData.data, mean, std)
+--image_utils.normalizeGlobal(valData.data, mean, std)
 --image_utils.contrastNormalize(valData.attr, -1, 1, old_min, old_max)
 valData:scaleData()
 
@@ -195,7 +186,7 @@ for t = epoch+1, opts.maxEpoch do
       -- flip
       local flip = math.random(2)-1
       if flip == 1 then
-        cur_im = image.vflip(cur_im:float())
+        cur_im = image.hflip(cur_im:float())
       end
       -- color space augmentation
       local randR = torch.rand(1)*0.06+0.97
@@ -210,8 +201,8 @@ for t = epoch+1, opts.maxEpoch do
       local randSh = torch.rand(1)*1.5
       cur_im:add(randSh:float()[1], cur_im_residue)
 
-      cur_im:mul(std)
-      cur_im:add(mean)
+      --cur_im:mul(std)
+      --cur_im:add(mean)
 
       local cur_attr = trainData[idx][2]:clone()
 
@@ -276,12 +267,12 @@ for t = epoch+1, opts.maxEpoch do
       local cur_im = valData[idx][1]:float():clone()
       local flip = math.random(2)-1
       if flip == 1 then
-        cur_im = image.vflip(cur_im:float())
+        cur_im = image.hflip(cur_im:float())
       end
       local cur_attr = valData[idx][2]:clone()
 
-      cur_im:mul(std)
-      cur_im:add(mean)
+      --cur_im:mul(std)
+      --cur_im:add(mean)
       batch_im[{{k},{},{},{}}] = cur_im
       batch_attr[{{k}, {}}] = cur_attr
       k = k + 1
@@ -321,8 +312,8 @@ for t = epoch+1, opts.maxEpoch do
       local idx = math.random(nval)
       local cur_im = valData[idx][1]:float():clone()
       local cur_attr = valData[idx][2]:float():clone()
-      cur_im:mul(std)
-      cur_im:add(mean)
+      --cur_im:mul(std)
+      --cur_im:add(mean)
       batch_im[i] = cur_im
       batch_attr[i] = cur_attr
     end
@@ -335,6 +326,7 @@ for t = epoch+1, opts.maxEpoch do
       local res = f[1][i]:clone()
       res = torch.squeeze(res)
       res:add(1):mul(0.5)
+      
       to_plot[#to_plot+1] = res:clone()
       local res = batch_im[i]:clone()
       res = torch.squeeze(res)
@@ -345,7 +337,7 @@ for t = epoch+1, opts.maxEpoch do
     local formatted = image.toDisplayTensor({input=to_plot, nrow=8})
     formatted = formatted:double()
     formatted:mul(255)
-    formatted = image.rotate(formatted, -math.pi/2):clone()
+    --formatted = image.rotate(formatted, -math.pi/2):clone()
     formatted = formatted:byte()
 
     image.save(opts.modelPath .. string.format('/sample-%d.jpg', t), formatted)
