@@ -1,3 +1,4 @@
+-- Code adapted from https://github.com/y0ast/VAE-Torch
 require 'nn'
 
 local GaussianCriterion, parent = torch.class('nn.GaussianCriterion', 'nn.Criterion')
