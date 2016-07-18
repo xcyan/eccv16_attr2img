@@ -295,7 +295,7 @@ for t = epoch+1, opts.maxEpoch do
   print(string.format('#### epoch (%d)\t train LB (LL, KL) = %g (%g, %g) ####',
     t, trainLB/N_train, trainLL/N_train, trainKL/N_train))
   print(string.format('#### epoch (%d)\t val LB (LL, KL) = %g (%g, %g) ####',
-    t, valLB/N_val, trainLL/N_val, trainKL/N_val))
+    t, valLB/N_val, valLL/N_val, valKL/N_val))
 
   -- Displaying the intermediate results
   if t % 1 == 0 then

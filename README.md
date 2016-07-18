@@ -12,7 +12,7 @@ Attribute2Image requires or works with
 ## Installing Dependency
 * Install [Torch](http://torch.ch)
 
-## Data Downloading
+## Data Preprocessing
 * For LFW dataset, please run the script to download the pre-processed dataset
 ```
 ./prepare_cropped_lfw.sh
@@ -22,12 +22,12 @@ Attribute2Image requires or works with
 ```
 ./prepare_cropped_celeba.sh
 ```
-## Training your neural networks
-* If you want to train the LFW image generators, please run the script (less than 3 hours)
+## Training
+* If you want to train the LFW image generator, please run the script (less than 3 hours)
 ```
 ./demo_lfw.sh
 ```
-* If you want to train the CelebA image generators, please run the script (around 24 hours)
+* If you want to train the CelebA image generator, please run the script (around 24 hours)
 ```
 ./demo_celeba.sh
 ```
