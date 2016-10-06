@@ -189,7 +189,7 @@ for t = epoch+1, opts.maxEpoch do
       local cur_im_residue = torch.add(cur_im, -1, cur_im_blurred)
       local randSh = torch.rand(1)*1.5
       cur_im:add(randSh:float()[1], cur_im_residue)
-      local cur_attr = trainData[idx][2]:clone()
+      local cur_attr = trainData[idx][3]:clone()
 
       batch_im[k] = cur_im
       batch_attr[k] = cur_attr
@@ -212,8 +212,8 @@ for t = epoch+1, opts.maxEpoch do
       local df_dw = criterionLL:backward(f, batch_im)
       cvae:backward({{batch_im, batch_attr}, batch_attr}, df_dw)
 
-      local KLDerr = criterionKLD:forward(enc_sampling:get(1).output, batch_im)
-      local de_dw = criterionKLD:backward(enc_sampling:get(1).output, batch_im)
+      local KLDerr = criterionKLD:forward(enc_sampling:get(1).output, nil)
+      local de_dw = criterionKLD:backward(enc_sampling:get(1).output, nil)
       encoder:backward({batch_im, batch_attr}, de_dw)
 
       curLL = LLerr
@@ -252,7 +252,7 @@ for t = epoch+1, opts.maxEpoch do
       if flip == 1 then
         cur_im = image.hflip(cur_im:float())
       end
-      local cur_attr = valData[idx][2]:clone()
+      local cur_attr = valData[idx][3]:clone()
       batch_im[k] = cur_im
       batch_attr[k] = cur_attr
       k = k + 1
@@ -262,7 +262,7 @@ for t = epoch+1, opts.maxEpoch do
     cvae:zeroGradParameters()
     local f = cvae:forward({{batch_im, batch_attr}, batch_attr})
     local LLerr = criterionLL:forward(f, batch_im)
-    local KLDerr = criterionKLD:forward(enc_sampling:get(1).output, batch_im)
+    local KLDerr = criterionKLD:forward(enc_sampling:get(1).output, nil)
 
     samples_gt = batch_im:float():clone()
     samples_gen = f[1]:float():clone()
@@ -292,7 +292,7 @@ for t = epoch+1, opts.maxEpoch do
     for i = 1, 32 do
       local idx = math.random(nval)
       local cur_im = valData[idx][1]:float():clone()
-      local cur_attr = valData[idx][2]:float():clone()
+      local cur_attr = valData[idx][3]:float():clone()
       batch_im[i] = cur_im
       batch_attr[i] = cur_attr
     end
