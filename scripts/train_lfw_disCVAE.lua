@@ -417,7 +417,7 @@ for t = epoch+1, opts.maxEpoch do
       batch_fg[i] = cur_fg
       batch_attr[i] = cur_attr
     end
-    batch_im:mul(2):add(-1)
+    --batch_im:mul(2):add(-1)
 
     local h_mix = decoder_fg:forward({batch_z_fg, batch_attr})
     local f0 = h_mix[1]
@@ -448,7 +448,7 @@ for t = epoch+1, opts.maxEpoch do
       to_plot[#to_plot+1] = res:clone()
     end
 
-    local formatted = image.toDisplayTensor({input=to_plot, nrow=8})
+    local formatted = image.toDisplayTensor({input=to_plot, nrow=16})
     formatted = formatted:double()
     formatted:mul(255)
     formatted = formatted:byte()
