@@ -1,4 +1,4 @@
 mkdir ./data
-wget -O data/lfw_attr2img.zip https://www.dropbox.com/s/lzohr3qxrsmdt69/lfw_attr2img.zip
+wget -O data/lfw_attr2img.zip https://drive.google.com/open?id=0B9Q4vh7pPrOOdUU0dS1XOWJiTWM
 unzip data/lfw_attr2img.zip -d data/
 
