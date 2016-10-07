@@ -164,13 +164,19 @@ function getAdamParams(opts)
     config.epsilon = 1e-8
     config.beta1 = 0.9
     config.beta2 = 0.999
-    config.weightDecay = -opts.weightDecay
+    config.weightDecay = opts.weightDecay
   elseif opts.adam == 2 then
     config.learningRate = 0.0003
     config.epsilon = 1e-8
     config.beta1 = 0.5
     config.beta2 = 0.999
-    config.weightDecay = -opts.weightDecay
+    config.weightDecay = opts.weightDecay
+  elseif opts.adam == 3 then
+    config.learningRate = 0.0001
+    config.epsilon = 1e-8
+    config.beta1 = 0.9
+    config.beta2 = 0.999
+    config.weightDecay = opts.weightDecay
   end
   return config
 end
@@ -313,7 +319,7 @@ for t = epoch+1, opts.maxEpoch do
     trainKL0 = trainKL0 + curKL0
     trainKL1 = trainKL1 + curKL1
     trainBCE = trainBCE + curBCE
-    print(string.format('Epoch %d [%d/%d]:\t LB (FG, IM, MA, KL_FG, KL_IM) = [%g %g %g], [%g %g]', 
+    print(string.format('Epoch %d [%d/%d]:\t LB (FG, IM, MA, KL_FG, KL_IM) = %g [%g %g %g], [%g %g]', 
       t, i, N_train, batchLB[1]/opts.batchSize, curLL0/opts.batchSize, 
       curLL1/opts.batchSize, curBCE/opts.batchSize, 
       curKL0/opts.batchSize, curKL1/opts.batchSize))
@@ -390,10 +396,10 @@ for t = epoch+1, opts.maxEpoch do
     LBlist_val = torch.Tensor(1,1):fill(valLB/N_val):float()
   end
 
-  print(string.format('#### epoch (%d)\t train LB (FG, IM, MA, KL_FG, KL_IM) = %g (%g, %g, %g, %g) ####',
+  print(string.format('#### epoch (%d)\t train LB (FG, IM, MA, KL_FG, KL_IM) = %g (%g, %g, %g, %g, %g) ####',
     t, trainLB/N_train, trainLL0/N_train, trainLL1/N_train, trainBCE/N_train,
       trainKL0/N_train, trainKL1/N_train))
-  print(string.format('#### epoch (%d)\t val LB (FG, IM, MA, KL_FG, KL_IM) = %g (%g, %g, %g, %g) ####', 
+  print(string.format('#### epoch (%d)\t val LB (FG, IM, MA, KL_FG, KL_IM) = %g (%g, %g, %g, %g, %g) ####', 
     t, valLB/N_val, valLL0/N_val, valLL1/N_val, valBCE/N_val, 
       valKL0/N_val, valKL1/N_val))
 
