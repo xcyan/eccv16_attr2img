@@ -15,17 +15,17 @@ Attribute2Image requires or works with
 ## Data Preprocessing
 * For LFW dataset, please run the script to download the pre-processed dataset
 ```
-./prepare_cropped_lfw.sh
+./prep_cropped_lfw.sh
 ```
 
 * For CelebA dataset, please download the [original dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and then run the script for pre-processing 
 ```
-./prepare_cropped_celeba.sh
+./prep_cropped_celeba.sh
 ```
 
 * For CUB dataset, please run the script to download the pre-processed dataset
 ```
-./prepare_cropped_cub.sh
+./prep_cropped_cub.sh
 ```
 ## Training (vanilla CVAE)
 * If you want to train the LFW image generator, please run the script (less than 3 hours on a single Titan X GPU)
