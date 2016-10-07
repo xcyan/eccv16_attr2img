@@ -22,14 +22,28 @@ Attribute2Image requires or works with
 ```
 ./prepare_cropped_celeba.sh
 ```
-## Training
-* If you want to train the LFW image generator, please run the script (less than 3 hours)
+
+* For CUB dataset, please run the script to download the pre-processed dataset
 ```
-./demo_lfw.sh
+./prepare_cropped_cub.sh
 ```
-* If you want to train the CelebA image generator, please run the script (around 24 hours)
+## Training (vanilla CVAE)
+* If you want to train the LFW image generator, please run the script (less than 3 hours on a single Titan X GPU)
 ```
-./demo_celeba.sh
+./demo_lfw_trainCVAE.sh
+```
+* If you want to train the CelebA image generator, please run the script (around 24 hours on a single Titan X GPU)
+```
+./demo_celeba_trainCVAE.sh
+```
+## Training (disentangling CVAE)
+* If you want to train the LFW layered image generator, please run the script (less than 5 hours on a single Titan X GPU)
+```
+./demo_lfw_trainDisCVAE.sh
+```
+* If you want to train the CUB layered image generator, please run the script (less than 3 hours on a single Titan X GPU)
+```
+./demo_cub_trainDisCVAE.sh
 ```
 ## Citation
 
