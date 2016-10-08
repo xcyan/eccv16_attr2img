@@ -1,6 +1,6 @@
 # Attribute2Image
 
-This is the code for arXiv paper [Attribute2Image: Conditional Image Generation from Visual Attributes](https://arxiv.org/abs/1512.00570) by Xinchen Yan, Jimei Yang, Kihyuk Sohn and Honglak Lee.
+This is the code for ECCV 2016 paper [Attribute2Image: Conditional Image Generation from Visual Attributes](https://arxiv.org/abs/1512.00570) by Xinchen Yan, Jimei Yang, Kihyuk Sohn and Honglak Lee.
 
 Please follow the instructions to run the code.
 
@@ -45,6 +45,9 @@ Attribute2Image requires or works with
 ```
 ./demo_cub_trainDisCVAE.sh
 ```
+## Visualization using Pre-trained Models
+TBD
+
 ## Citation
 
 If you find this useful, please cite our work as follows:
