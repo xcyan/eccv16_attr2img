@@ -17,6 +17,7 @@ Attribute2Image requires or works with
 ```
 ./prep_cropped_lfw.sh
 ```
+* Disclaimer: Please cite the [LFW paper](https://link.springer.com/book/10.1007/978-3-319-25958-1) if you download this pre-processed version.
 
 * For CelebA dataset, please download the [original dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and then run the script for pre-processing 
 ```
