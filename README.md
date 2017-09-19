@@ -2,6 +2,8 @@
 
 This is the code for ECCV 2016 paper [Attribute2Image: Conditional Image Generation from Visual Attributes](https://arxiv.org/abs/1512.00570) by Xinchen Yan, Jimei Yang, Kihyuk Sohn and Honglak Lee.
 
+<img src="https://umich.box.com/shared/static/gm2kajfs7cf88hvcsbjviggt7u7tijyj.png" width="900px" height="360px"/>
+
 Please follow the instructions to run the code.
 
 ## Requirements
