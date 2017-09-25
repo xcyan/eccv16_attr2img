@@ -1,4 +1,4 @@
 mkdir ./data
-wget -O data/cub_attr2img.zip https://dl.dropboxusercontent.com/u/483000889/attr2img/cub_attr2img.zip
+wget -O data/cub_attr2img.zip https://umich.box.com/shared/static/uy5oax668e1v5e5aut69nbqglqk0gxuq.zip
 unzip data/cub_attr2img.zip -d data/
 
