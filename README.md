@@ -25,6 +25,11 @@ Attribute2Image requires or works with
 ```
 ./prep_cropped_celeba.sh
 ```
+* Alternatively, you can download the pre-processed .t7 files with the following script:
+```
+./download_preprocessed_celeba.sh
+```
+* Disclaimer: Please cite the [CelebA paper](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) if you download the pre-processed .t7 files.
 
 * For CUB dataset, please run the script to download the pre-processed dataset
 ```
