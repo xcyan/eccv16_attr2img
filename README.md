@@ -2,7 +2,7 @@
 
 This is the code for ECCV 2016 paper [Attribute2Image: Conditional Image Generation from Visual Attributes](https://arxiv.org/abs/1512.00570) by Xinchen Yan, Jimei Yang, Kihyuk Sohn and Honglak Lee.
 
-<img src="https://umich.box.com/shared/static/gm2kajfs7cf88hvcsbjviggt7u7tijyj.png" width="900px" height="360px"/>
+<img src="https://97ec8ad8-a-62cb3a1a-s-sites.googlegroups.com/site/attribute2image/home/Figure_progression_new_hl.png" width="900px" height="360px"/>
 
 Please follow the instructions to run the code.
 
